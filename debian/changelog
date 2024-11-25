@@ -1,8 +1,42 @@
-wget (1.21.2-deepin1) unstable; urgency=medium
+wget (1.25.0-0deepin1) unstable; urgency=medium
 
-  * Rebuild
+  * new upstream release 1.25.0
+    addresses CVE-2024-10524
 
- -- Deepin Packages Builder <packages@deepin.org>  Fri, 11 Nov 2022 18:06:15 +0800
+ -- Tianyu Chen <sweetyfish@deepin.org>  Mon, 25 Nov 2024 11:30:15 +0800
+
+wget (1.24.5-2) unstable; urgency=medium
+
+  * patch from git to fix CVE-2024-38428 URL parser issue with semicolons
+    closes: Bug#1073523
+  * debian/rules replace cp by dh_update_autotools_config
+  * debian/control raised Standards-Version to 4.7.0, no changes needed
+  * debian/control add Vcs-Browser
+
+ -- Noël Köthe <noel@debian.org>  Sun, 28 Jul 2024 06:49:33 +0200
+
+wget (1.24.5-1) unstable; urgency=medium
+
+  * new upstream release from 2024-03-10
+    - version jump by accident by upstream ;)
+  * debian/control corrected superseded pkg-config -> pkgconf build-dep
+
+ -- Noël Köthe <noel@debian.org>  Sun, 17 Mar 2024 11:31:58 +0100
+
+wget (1.21.4-1) unstable; urgency=medium
+
+  * new upstream from 2023-05-10
+  * debian/control: added missing Rules-Requires-Root
+
+ -- Noël Köthe <noel@debian.org>  Sat, 09 Sep 2023 12:05:49 +0200
+
+wget (1.21.3-1) unstable; urgency=medium
+
+  * new upstream from 2022-02-26
+    * remove now included patch from 1.21.2-2
+      ssl_Removesupriousprintstatements_wget61125.patch
+
+ -- Noël Köthe <noel@debian.org>  Tue, 29 Mar 2022 19:40:59 +0200
 
 wget (1.21.2-2) unstable; urgency=medium
 

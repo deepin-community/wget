@@ -2,9 +2,11 @@ Source: wget
 Section: web
 Priority: standard
 Maintainer: Noël Köthe <noel@debian.org>
-Build-Depends: debhelper-compat (= 13), pkg-config, gettext, texinfo, libidn2-dev, uuid-dev, libpsl-dev, libpcre2-dev, libgnutls28-dev (>= 3.3.15-5), automake, libssl-dev (>= 0.9.8k), zlib1g-dev, dh-strip-nondeterminism
-Standards-Version: 4.5.1
+Build-Depends: debhelper-compat (= 13), pkgconf, gettext, texinfo, libidn2-dev, uuid-dev, libpsl-dev, libpcre2-dev, libgnutls28-dev (>= 3.3.15-5), automake, libssl-dev (>= 0.9.8k), zlib1g-dev, dh-strip-nondeterminism
+Standards-Version: 4.7.0
 Homepage: https://www.gnu.org/software/wget/
+Vcs-Browser: https://salsa.debian.org/noel/wget
+Rules-Requires-Root: no
 
 Package: wget
 Architecture: any

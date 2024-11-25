@@ -1,5 +1,5 @@
 /* Collect URLs from HTML source.
-   Copyright (C) 1998-2012, 2015, 2018-2021 Free Software Foundation,
+   Copyright (C) 1998-2012, 2015, 2018-2024 Free Software Foundation,
    Inc.
 
 This file is part of GNU Wget.
@@ -105,7 +105,7 @@ static struct known_tag {
   { TAG_FORM,    "form",        tag_handle_form },
   { TAG_FRAME,   "frame",       tag_find_urls },
   { TAG_IFRAME,  "iframe",      tag_find_urls },
-  { TAG_IMG,     "img",         tag_handle_img },
+  { TAG_IMG,     "img",         tag_handle_img }, // tag_find_urls() plus handling "srcset"
   { TAG_INPUT,   "input",       tag_find_urls },
   { TAG_LAYER,   "layer",       tag_find_urls },
   { TAG_LINK,    "link",        tag_handle_link },
@@ -118,7 +118,7 @@ static struct known_tag {
   { TAG_TH,      "th",          tag_find_urls },
   { TAG_VIDEO,   "video",       tag_find_urls },
   { TAG_AUDIO,   "audio",       tag_find_urls },
-  { TAG_SOURCE,  "source",      tag_find_urls }
+  { TAG_SOURCE,  "source",      tag_handle_img } // tag_find_urls() plus handling "srcset"
 };
 
 /* tag_url_attributes documents which attributes of which tags contain
@@ -170,7 +170,7 @@ static struct {
   { TAG_VIDEO,          "poster",       ATTR_INLINE },
   { TAG_AUDIO,          "src",          ATTR_INLINE },
   { TAG_AUDIO,          "poster",       ATTR_INLINE },
-  { TAG_SOURCE,         "src",          ATTR_INLINE }
+  { TAG_SOURCE,         "src",          ATTR_INLINE },
 };
 
 /* The lists of interesting tags and attributes are built dynamically,
@@ -874,20 +874,21 @@ get_urls_html (const char *file, const char *url, bool *meta_disallow_follow,
    to get_urls_html, so we put it here.  */
 
 struct urlpos *
-get_urls_file (const char *file)
+get_urls_file (const char *file, bool *read_again)
 {
   struct file_memory *fm;
   struct urlpos *head, *tail;
   const char *text, *text_end;
 
   /* Load the file.  */
-  fm = wget_read_file (file);
+  fm = wget_read_from_file (file, read_again);
   if (!fm)
     {
       logprintf (LOG_NOTQUIET, "%s: %s\n", file, strerror (errno));
       return NULL;
     }
-  DEBUGP (("Loaded %s (size %s).\n", file, number_to_static_string (fm->length)));
+  if (fm->length)
+    DEBUGP (("Loaded %s (size %s).\n", file, number_to_static_string (fm->length)));
 
   head = tail = NULL;
   text = fm->content;
@@ -931,7 +932,7 @@ get_urls_file (const char *file)
           url_text = merged;
         }
 
-      new_url = rewrite_shorthand_url (url_text);
+      new_url = maybe_prepend_scheme (url_text);
       if (new_url)
         {
           xfree (url_text);
@@ -941,11 +942,9 @@ get_urls_file (const char *file)
       url = url_parse (url_text, &up_error_code, NULL, false);
       if (!url)
         {
-          char *error = url_error (url_text, up_error_code);
           logprintf (LOG_NOTQUIET, _("%s: Invalid URL %s: %s\n"),
-                     file, url_text, error);
+                     file, url_text, url_error (up_error_code));
           xfree (url_text);
-          xfree (error);
           inform_exit_status (URLERROR);
           continue;
         }

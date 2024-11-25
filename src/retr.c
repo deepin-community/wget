@@ -1,5 +1,5 @@
 /* File retrieval.
-   Copyright (C) 1996-2011, 2014-2015, 2018-2021 Free Software
+   Copyright (C) 1996-2011, 2014-2015, 2018-2024 Free Software
    Foundation, Inc.
 
 This file is part of GNU Wget.
@@ -44,6 +44,10 @@ as that of the covered work.  */
 # include <zlib.h>
 #endif
 
+#ifdef HAVE_LIBPROXY
+# include "proxy.h"
+#endif
+
 #include "exits.h"
 #include "utils.h"
 #include "retr.h"
@@ -54,7 +58,6 @@ as that of the covered work.  */
 #include "http.h"
 #include "host.h"
 #include "connect.h"
-#include "hash.h"
 #include "convert.h"
 #include "ptimer.h"
 #include "html-url.h"
@@ -255,9 +258,7 @@ fd_read_body (const char *downloaded_filename, int fd, FILE *out, wgint toread, 
               FILE *out2)
 {
   int ret = 0;
-#undef max
-#define max(a,b) ((a) > (b) ? (a) : (b))
-  int dlbufsize = max (BUFSIZ, 8 * 1024);
+  int dlbufsize = MAX (BUFSIZ, 64 * 1024);
   char *dlbuf = xmalloc (dlbufsize);
 
   struct ptimer *timer = NULL;
@@ -293,28 +294,19 @@ fd_read_body (const char *downloaded_filename, int fd, FILE *out, wgint toread, 
   if (flags & rb_compressed_gzip)
     {
       gzbuf = xmalloc (gzbufsize);
-      if (gzbuf != NULL)
-        {
-          gzstream.zalloc = zalloc;
-          gzstream.zfree = zfree;
-          gzstream.opaque = Z_NULL;
-          gzstream.next_in = Z_NULL;
-          gzstream.avail_in = 0;
+      gzstream.zalloc = zalloc;
+      gzstream.zfree = zfree;
+      gzstream.opaque = Z_NULL;
+      gzstream.next_in = Z_NULL;
+      gzstream.avail_in = 0;
 
-          #define GZIP_DETECT 32 /* gzip format detection */
-          #define GZIP_WINDOW 15 /* logarithmic window size (default: 15) */
-          ret = inflateInit2 (&gzstream, GZIP_DETECT | GZIP_WINDOW);
-          if (ret != Z_OK)
-            {
-              xfree (gzbuf);
-              errno = (ret == Z_MEM_ERROR) ? ENOMEM : EINVAL;
-              ret = -1;
-              goto out;
-            }
-        }
-      else
+      #define GZIP_DETECT 32 /* gzip format detection */
+      #define GZIP_WINDOW 15 /* logarithmic window size (default: 15) */
+      ret = inflateInit2 (&gzstream, GZIP_DETECT | GZIP_WINDOW);
+      if (ret != Z_OK)
         {
-          errno = ENOMEM;
+          xfree (gzbuf);
+          errno = (ret == Z_MEM_ERROR) ? ENOMEM : EINVAL;
           ret = -1;
           goto out;
         }
@@ -458,7 +450,7 @@ fd_read_body (const char *downloaded_filename, int fd, FILE *out, wgint toread, 
           sum_read += ret;
 
 #ifdef HAVE_LIBZ
-          if (gzbuf != NULL)
+          if (gzbuf)
             {
               int err;
               int towrite;
@@ -570,7 +562,7 @@ fd_read_body (const char *downloaded_filename, int fd, FILE *out, wgint toread, 
     }
 
 #ifdef HAVE_LIBZ
-  if (gzbuf != NULL)
+  if (gzbuf)
     {
       int err = inflateEnd (&gzstream);
       if (ret >= 0)
@@ -788,8 +780,8 @@ const char *
 retr_rate (wgint bytes, double secs)
 {
   static char res[20];
-  static const char *rate_names[] = {"B/s", "KB/s", "MB/s", "GB/s" };
-  static const char *rate_names_bits[] = {"b/s", "Kb/s", "Mb/s", "Gb/s" };
+  static const char *rate_names[] = {"B/s", "KB/s", "MB/s", "GB/s", "TB/s" };
+  static const char *rate_names_bits[] = {"b/s", "Kb/s", "Mb/s", "Gb/s", "Tb/s" };
   int units;
 
   double dlrate = calc_rate (bytes, secs, &units);
@@ -930,11 +922,9 @@ retrieve_url (struct url * orig_parsed, const char *origurl, char **file,
       proxy_url = url_parse (proxy, &up_error_code, pi, true);
       if (!proxy_url)
         {
-          char *error = url_error (proxy, up_error_code);
           logprintf (LOG_NOTQUIET, _("Error parsing proxy URL %s: %s.\n"),
-                     proxy, error);
+                     proxy, url_error (up_error_code));
           xfree (url);
-          xfree (error);
           xfree (proxy);
           iri_free (pi);
           RESTORE_METHOD;
@@ -1053,16 +1043,14 @@ retrieve_url (struct url * orig_parsed, const char *origurl, char **file,
       newloc_parsed = url_parse (mynewloc, &up_error_code, iri, true);
       if (!newloc_parsed)
         {
-          char *error = url_error (mynewloc, up_error_code);
           logprintf (LOG_NOTQUIET, "%s: %s.\n", escnonprint_uri (mynewloc),
-                     error);
+                     url_error (up_error_code));
           if (orig_parsed != u)
             {
               url_free (u);
             }
           xfree (url);
           xfree (mynewloc);
-          xfree (error);
           RESTORE_METHOD;
           goto bail;
         }
@@ -1189,82 +1177,19 @@ bail:
   return result;
 }
 
-/* Find the URLs in the file and call retrieve_url() for each of them.
-   If HTML is true, treat the file as HTML, and construct the URLs
-   accordingly.
-
-   If opt.recursive is set, call retrieve_tree() for each file.  */
-
-uerr_t
-retrieve_from_file (const char *file, bool html, int *count)
+static uerr_t retrieve_from_url_list(struct urlpos *url_list, int *count, struct iri *iri)
 {
+  struct urlpos *cur_url;
   uerr_t status;
-  struct urlpos *url_list, *cur_url;
-  struct iri *iri = iri_new();
-
-  char *input_file, *url_file = NULL;
-  const char *url = file;
 
   status = RETROK;             /* Suppose everything is OK.  */
-  *count = 0;                  /* Reset the URL count.  */
-
-  /* sXXXav : Assume filename and links in the file are in the locale */
-  set_uri_encoding (iri, opt.locale, true);
-  set_content_encoding (iri, opt.locale);
-
-  if (url_valid_scheme (url))
-    {
-      int dt,url_err;
-      struct url *url_parsed = url_parse (url, &url_err, iri, true);
-      if (!url_parsed)
-        {
-          char *error = url_error (url, url_err);
-          logprintf (LOG_NOTQUIET, "%s: %s.\n", url, error);
-          xfree (error);
-          iri_free (iri);
-          return URLERROR;
-        }
-
-      if (!opt.base_href)
-        opt.base_href = xstrdup (url);
-
-      status = retrieve_url (url_parsed, url, &url_file, NULL, NULL, &dt,
-                             false, iri, true);
-      url_free (url_parsed);
-
-      if (!url_file || (status != RETROK))
-        return status;
-
-      if (dt & TEXTHTML)
-        html = true;
-
-#ifdef ENABLE_IRI
-      /* If we have a found a content encoding, use it.
-       * ( == is okay, because we're checking for identical object) */
-      if (iri->content_encoding != opt.locale)
-          set_uri_encoding (iri, iri->content_encoding, false);
-#endif
-
-      /* Reset UTF-8 encode status */
-      iri->utf8_encode = opt.enable_iri;
-      xfree (iri->orig_url);
-
-      input_file = url_file;
-    }
-  else
-    input_file = (char *) file;
-
-  url_list = (html ? get_urls_html (input_file, NULL, NULL, iri)
-              : get_urls_file (input_file));
-
-  xfree (url_file);
 
   for (cur_url = url_list; cur_url; cur_url = cur_url->next, ++*count)
     {
       char *filename = NULL, *new_file = NULL, *proxy;
       int dt = 0;
-      struct iri *tmpiri = iri_dup (iri);
-      struct url *parsed_url = NULL;
+      struct iri *tmpiri;
+      struct url *parsed_url;
 
       if (cur_url->ignore_when_downloading)
         continue;
@@ -1275,6 +1200,7 @@ retrieve_from_file (const char *file, bool html, int *count)
           break;
         }
 
+      tmpiri = iri_dup (iri);
       parsed_url = url_parse (cur_url->url->url, NULL, tmpiri, true);
 
       proxy = getproxy (cur_url->url);
@@ -1324,6 +1250,83 @@ Removing file due to --delete-after in retrieve_from_file():\n"));
       xfree (filename);
       iri_free (tmpiri);
     }
+  return status;
+}
+
+/* Find the URLs in the file and call retrieve_url() for each of them.
+   If HTML is true, treat the file as HTML, and construct the URLs
+   accordingly.
+
+   If opt.recursive is set, call retrieve_tree() for each file.  */
+
+uerr_t
+retrieve_from_file (const char *file, bool html, int *count)
+{
+  uerr_t status;
+  struct urlpos *url_list, *cur_url;
+  struct iri *iri = iri_new();
+
+  char *input_file, *url_file = NULL;
+  const char *url = file;
+
+  *count = 0;                  /* Reset the URL count.  */
+
+  /* sXXXav : Assume filename and links in the file are in the locale */
+  set_uri_encoding (iri, opt.locale, true);
+  set_content_encoding (iri, opt.locale);
+
+  if (url_valid_scheme (url))
+    {
+      int dt,url_err;
+      struct url *url_parsed = url_parse (url, &url_err, iri, true);
+      if (!url_parsed)
+        {
+          logprintf (LOG_NOTQUIET, "%s: %s.\n", url, url_error (url_err));
+          iri_free (iri);
+          return URLERROR;
+        }
+
+      if (!opt.base_href)
+        opt.base_href = xstrdup (url);
+
+      status = retrieve_url (url_parsed, url, &url_file, NULL, NULL, &dt,
+                             false, iri, true);
+      url_free (url_parsed);
+
+      if (!url_file || (status != RETROK))
+        {
+          iri_free (iri);
+          return status;
+        }
+
+      if (dt & TEXTHTML)
+        html = true;
+
+#ifdef ENABLE_IRI
+      /* If we have a found a content encoding, use it.
+       * ( == is okay, because we're checking for identical object) */
+      if (iri->content_encoding != opt.locale)
+          set_uri_encoding (iri, iri->content_encoding, false);
+#endif
+
+      /* Reset UTF-8 encode status */
+      iri->utf8_encode = opt.enable_iri;
+      xfree (iri->orig_url);
+
+      input_file = url_file;
+    }
+  else
+    input_file = (char *) file;
+
+  bool read_again = false;
+  do {
+    url_list = (html ? get_urls_html (input_file, NULL, NULL, iri)
+                : get_urls_file (input_file, &read_again));
+
+    status = retrieve_from_url_list(url_list, count, iri);
+  } while (read_again);
+
+  xfree (url_file);
 
   /* Free the linked list of URL-s.  */
   free_urlpos (url_list);
@@ -1449,16 +1452,25 @@ rotate_backups(const char *fname)
       if (overflow)
           errno = ENAMETOOLONG;
       if (overflow || rename (from, to))
-        logprintf (LOG_NOTQUIET, "Failed to rename %s to %s: (%d) %s\n",
-                   from, to, errno, strerror (errno));
+        {
+          // The original file may not exist. In which case rename() will
+          // return ENOENT. This is not a real error. We could make this better
+          // by calling stat() first and making sure that the file exists.
+          if (errno != ENOENT)
+              logprintf (LOG_NOTQUIET, "Failed to rename %s to %s: (%d) %s\n",
+                      from, to, errno, strerror (errno));
+        }
     }
 
   overflow = (unsigned) snprintf (to, FILE_BUF_SIZE, "%s%s%d", fname, SEP, 1) >= FILE_BUF_SIZE;
   if (overflow)
     errno = ENAMETOOLONG;
   if (overflow || rename(fname, to))
-    logprintf (LOG_NOTQUIET, "Failed to rename %s to %s: (%d) %s\n",
-               fname, to, errno, strerror (errno));
+    {
+      if (errno != ENOENT)
+          logprintf (LOG_NOTQUIET, "Failed to rename %s to %s: (%d) %s\n",
+                  from, to, errno, strerror (errno));
+    }
 
 #undef FILE_BUF_SIZE
 }
@@ -1498,11 +1510,43 @@ getproxy (struct url *u)
       break;
     }
   if (!proxy || !*proxy)
+#ifdef HAVE_LIBPROXY
+    {
+      pxProxyFactory *pf = px_proxy_factory_new ();
+      if (!pf)
+        {
+          DEBUGP (("Allocating memory for libproxy failed"));
+         return NULL;
+        }
+
+      DEBUGP (("asking libproxy about url '%s'\n", u->url));
+      char **proxies = px_proxy_factory_get_proxies (pf, u->url);
+      if (proxies)
+        {
+          if (proxies[0])
+            {
+              DEBUGP (("libproxy suggest to use '%s'\n", proxies[0]));
+              if (strcmp (proxies[0], "direct://") != 0)
+                {
+                  proxy = xstrdup (proxies[0]);
+                  DEBUGP (("libproxy setting to use '%s'\n", proxy));
+                }
+            }
+
+           px_proxy_factory_free_proxies (proxies);
+        }
+        px_proxy_factory_free (pf);
+
+      if (!proxy || !*proxy)
+        return NULL;
+    }
+#else
     return NULL;
+#endif
 
   /* Handle shorthands.  `rewritten_storage' is a kludge to allow
      getproxy() to return static storage. */
-  rewritten_url = rewrite_shorthand_url (proxy);
+  rewritten_url = maybe_prepend_scheme (proxy);
   if (rewritten_url)
     return rewritten_url;
 
@@ -1564,3 +1608,33 @@ input_file_url (const char *input_file)
   else
     return false;
 }
+
+#ifdef TESTING
+
+#include <stdint.h>
+#include "../tests/unit-tests.h"
+
+const char *
+test_retr_rate(void)
+{
+  static const struct test {
+    wgint bytes;
+    double secs;
+    const char *expected;
+  } tests[] = {
+    { 0, 1, "0.00 B/s" },
+    { INT64_MAX, 1, "100 TB/s" },
+  };
+
+  for (struct test *t = tests; t < tests+countof(tests); t++)
+    {
+      const char *result = retr_rate (t->bytes, t->secs);
+
+      if (strcmp(result,t->expected))
+        return aprintf("%s: Expected '%s', got '%s'", __func__, t->expected, result);
+    }
+
+  return NULL;
+}
+
+#endif /* TESTING */

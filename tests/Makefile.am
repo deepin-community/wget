@@ -1,5 +1,5 @@
 # Makefile for `wget' utility
-# Copyright (C) 1995-2011, 2015, 2018-2021 Free Software Foundation,
+# Copyright (C) 1995-2011, 2015, 2018-2024 Free Software Foundation,
 # Inc.
 
 # This program is free software; you can redistribute it and/or modify
@@ -44,11 +44,6 @@
 	cd ../lib && $(MAKE) $(AM_MAKEFLAGS)
 
 PX_TESTS = \
-             Test-auth-basic.px \
-             Test-auth-no-challenge.px \
-             Test-auth-no-challenge-url.px \
-             Test-auth-with-content-disposition.px \
-             Test-auth-retcode.px \
              Test-c-full.px \
              Test-c-partial.px \
              Test-c.px \
@@ -89,7 +84,6 @@ PX_TESTS = \
              Test-iri-disabled.px \
              Test-iri-forced-remote.px \
              Test-iri-list.px \
-             Test-k.px \
              Test-meta-robots.px \
              Test-N-current.px \
              Test-N-HTTP-Content-Disposition.px \
@@ -145,10 +139,27 @@ EXTRA_DIST = FTPServer.pm FTPTest.pm HTTPServer.pm HTTPTest.pm \
 
 check_PROGRAMS = unit-tests
 unit_tests_SOURCES = unit-tests.c unit-tests.h
-LDADD = ../src/libunittest.a ../lib/libgnu.a $(GETADDRINFO_LIB) $(HOSTENT_LIB)\
- $(INET_NTOP_LIB) $(LIBSOCKET) $(LIB_CLOCK_GETTIME) $(LIB_CRYPTO)\
- $(LIB_NANOSLEEP) $(LIB_POSIX_SPAWN) $(LIB_SELECT) $(LIBICONV) $(LIBINTL)\
- $(LIBTHREAD) $(LIBUNISTRING) $(SERVENT_LIB)
+LDADD = ../src/libunittest.a ../lib/libgnu.a \
+ $(CLOCK_TIME_LIB) \
+ $(GETADDRINFO_LIB) \
+ $(GETRANDOM_LIB) \
+ $(HARD_LOCALE_LIB) \
+ $(HOSTENT_LIB) \
+ $(INET_NTOP_LIB) \
+ $(LIBSOCKET) \
+ $(LIBTHREAD) \
+ $(LIB_CRYPTO) \
+ $(LIBC32CONV) \
+ $(LIBICONV) \
+ $(LIBINTL) \
+ $(LIBUNISTRING) \
+ $(MBRTOWC_LIB) \
+ $(NANOSLEEP_LIB) \
+ $(POSIX_SPAWN_LIB) \
+ $(PTHREAD_SIGMASK_LIB) \
+ $(SELECT_LIB) \
+ $(SERVENT_LIB) \
+ $(SETLOCALE_NULL_LIB)
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib \
  -I$(top_srcdir)/src -DLOCALEDIR=\"$(localedir)\"
 AM_CFLAGS = $(WERROR_CFLAGS) $(WARN_CFLAGS)
@@ -156,7 +167,7 @@ AM_CFLAGS = $(WERROR_CFLAGS) $(WARN_CFLAGS)
 
 CLEANFILES = *~ *.bak core core.[0-9]*
 
-TESTS = ./unit-tests$(EXEEXT) $(PX_TESTS)
+TESTS = unit-tests$(EXEEXT) $(PX_TESTS)
 TEST_EXTENSIONS = .px
 PX_LOG_COMPILER = $(PERL)
 AM_PX_LOG_FLAGS = -I$(srcdir)
