@@ -24,7 +24,7 @@ CFLAGS += -DNO_SSLv2 -D_FILE_OFFSET_BITS=64 -g -Wall
 
 configure-stamp: configure-udeb-stamp
 	dh_testdir
-	cp /usr/share/misc/config.guess /usr/share/misc/config.sub .
+	dh_update_autotools_config
 	mkdir -p build
 	# Add here commands to configure the package.
 	cd build && CFLAGS="$(CFLAGS)" CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" ../configure \

@@ -29,6 +29,7 @@
    ...
    fun:fillin_rpath.isra.0
    fun:decompose_rpath
+   ...
    fun:_dl_map_object
    fun:openaux
    fun:_dl_catch_exception
@@ -242,4 +243,12 @@
    fun:http_loop
    fun:retrieve_url
    fun:main
+}
+
+{
+   <strcmp-sse2.S in libdl.so>
+   Memcheck:Addr8
+   fun:strncmp
+   fun:is_dst
+   ...
 }

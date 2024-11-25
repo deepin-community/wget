@@ -1,9 +1,9 @@
 ## DO NOT EDIT! GENERATED AUTOMATICALLY!
-# Copyright (C) 2002-2021 Free Software Foundation, Inc.
+# Copyright (C) 2002-2024 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This file is distributed in the hope that it will be useful,
@@ -30,10 +30,12 @@ lib/af_alg.h
 lib/alloca.c
 lib/alloca.in.h
 lib/arg-nonnull.h
+lib/arpa_inet.c
 lib/arpa_inet.in.h
 lib/array-mergesort.h
 lib/asnprintf.c
 lib/asprintf.c
+lib/assert.in.h
 lib/assure.h
 lib/at-func.c
 lib/attribute.h
@@ -47,7 +49,9 @@ lib/binary-io.h
 lib/bind.c
 lib/bitrotate.c
 lib/bitrotate.h
+lib/btoc32.c
 lib/btowc.c
+lib/byteswap.c
 lib/byteswap.in.h
 lib/c++defs.h
 lib/c-ctype.c
@@ -58,6 +62,24 @@ lib/c-strcaseeq.h
 lib/c-strcasestr.c
 lib/c-strcasestr.h
 lib/c-strncasecmp.c
+lib/c32_apply_type_test.c
+lib/c32_get_type_test.c
+lib/c32is-impl.h
+lib/c32isalnum.c
+lib/c32isalpha.c
+lib/c32isblank.c
+lib/c32iscntrl.c
+lib/c32isdigit.c
+lib/c32isgraph.c
+lib/c32islower.c
+lib/c32isprint.c
+lib/c32ispunct.c
+lib/c32isspace.c
+lib/c32isupper.c
+lib/c32isxdigit.c
+lib/c32to-impl.h
+lib/c32tolower.c
+lib/c32width.c
 lib/calloc.c
 lib/canonicalize-lgpl.c
 lib/canonicalize.c
@@ -87,7 +109,7 @@ lib/dynarray.h
 lib/eloop-threshold.h
 lib/errno.in.h
 lib/error.c
-lib/error.h
+lib/error.in.h
 lib/exitfail.c
 lib/exitfail.h
 lib/fatal-signal.c
@@ -158,6 +180,8 @@ lib/gettimeofday.c
 lib/gl_openssl.h
 lib/glthread/lock.c
 lib/glthread/lock.h
+lib/glthread/once.c
+lib/glthread/once.h
 lib/glthread/threadlib.c
 lib/group-member.c
 lib/hard-locale.c
@@ -173,12 +197,16 @@ lib/ialloc.h
 lib/iconv.in.h
 lib/idx.h
 lib/inet_ntop.c
+lib/intprops-internal.h
 lib/intprops.h
 lib/inttypes.in.h
 lib/ioctl.c
 lib/isblank.c
 lib/iswblank.c
+lib/iswctype-impl.h
+lib/iswctype.c
 lib/iswdigit.c
+lib/iswpunct.c
 lib/iswxdigit.c
 lib/itold.c
 lib/langinfo.in.h
@@ -204,7 +232,6 @@ lib/malloc/dynarray_finalize.c
 lib/malloc/dynarray_resize.c
 lib/malloc/dynarray_resize_clear.c
 lib/malloc/scratch_buffer.h
-lib/malloc/scratch_buffer_dupfree.c
 lib/malloc/scratch_buffer_grow.c
 lib/malloc/scratch_buffer_grow_preserve.c
 lib/malloc/scratch_buffer_set_array_size.c
@@ -214,21 +241,28 @@ lib/mbchar.c
 lib/mbchar.h
 lib/mbiter.c
 lib/mbiter.h
+lib/mbrtoc32.c
 lib/mbrtowc-impl-utf8.h
 lib/mbrtowc-impl.h
 lib/mbrtowc.c
 lib/mbsinit.c
+lib/mbsrtoc32s-state.c
+lib/mbsrtoc32s.c
 lib/mbsrtowcs-impl.h
 lib/mbsrtowcs-state.c
 lib/mbsrtowcs.c
+lib/mbszero.c
 lib/mbtowc-impl.h
 lib/mbtowc-lock.c
 lib/mbtowc-lock.h
 lib/mbtowc.c
+lib/md2-stream.c
 lib/md2.c
 lib/md2.h
+lib/md4-stream.c
 lib/md4.c
 lib/md4.h
+lib/md5-stream.c
 lib/md5.c
 lib/md5.h
 lib/memchr.c
@@ -268,6 +302,10 @@ lib/printf-args.c
 lib/printf-args.h
 lib/printf-parse.c
 lib/printf-parse.h
+lib/pselect.c
+lib/pthread-once.c
+lib/pthread.in.h
+lib/pthread_sigmask.c
 lib/quote.h
 lib/quotearg.c
 lib/quotearg.h
@@ -288,6 +326,7 @@ lib/regexec.c
 lib/rename.c
 lib/rewinddir.c
 lib/rmdir.c
+lib/same-inode.c
 lib/same-inode.h
 lib/save-cwd.c
 lib/save-cwd.h
@@ -297,13 +336,17 @@ lib/secure_getenv.c
 lib/select.c
 lib/send.c
 lib/setlocale-lock.c
+lib/setlocale_null-unlocked.c
 lib/setlocale_null.c
 lib/setlocale_null.h
 lib/setsockopt.c
+lib/sha1-stream.c
 lib/sha1.c
 lib/sha1.h
+lib/sha256-stream.c
 lib/sha256.c
 lib/sha256.h
+lib/sha512-stream.c
 lib/sha512.c
 lib/sha512.h
 lib/sig-handler.c
@@ -339,13 +382,14 @@ lib/stat-time.h
 lib/stat-w32.c
 lib/stat-w32.h
 lib/stat.c
-lib/stdalign.in.h
-lib/stdbool.in.h
+lib/stdckdint.in.h
 lib/stddef.in.h
 lib/stdint.in.h
 lib/stdio-impl.h
+lib/stdio-read.c
 lib/stdio-write.c
 lib/stdio.in.h
+lib/stdlib.c
 lib/stdlib.in.h
 lib/stpcpy.c
 lib/str-two-way.h
@@ -396,6 +440,7 @@ lib/tmpdir.c
 lib/tmpdir.h
 lib/u64.c
 lib/u64.h
+lib/uchar.in.h
 lib/unicase.in.h
 lib/unicase/cased.c
 lib/unicase/cased.h
@@ -419,6 +464,30 @@ lib/unictype.in.h
 lib/unictype/bitmap.h
 lib/unictype/combiningclass.c
 lib/unictype/combiningclass.h
+lib/unictype/ctype_alnum.c
+lib/unictype/ctype_alnum.h
+lib/unictype/ctype_alpha.c
+lib/unictype/ctype_alpha.h
+lib/unictype/ctype_blank.c
+lib/unictype/ctype_blank.h
+lib/unictype/ctype_cntrl.c
+lib/unictype/ctype_cntrl.h
+lib/unictype/ctype_digit.c
+lib/unictype/ctype_digit.h
+lib/unictype/ctype_graph.c
+lib/unictype/ctype_graph.h
+lib/unictype/ctype_lower.c
+lib/unictype/ctype_lower.h
+lib/unictype/ctype_print.c
+lib/unictype/ctype_print.h
+lib/unictype/ctype_punct.c
+lib/unictype/ctype_punct.h
+lib/unictype/ctype_space.c
+lib/unictype/ctype_space.h
+lib/unictype/ctype_upper.c
+lib/unictype/ctype_upper.h
+lib/unictype/ctype_xdigit.c
+lib/unictype/ctype_xdigit.h
 lib/unictype/pr_soft_dotted.c
 lib/unictype/pr_soft_dotted.h
 lib/uninorm.in.h
@@ -433,6 +502,14 @@ lib/unistd.c
 lib/unistd.in.h
 lib/unistr.in.h
 lib/unistr/u-cpy.h
+lib/unistr/u-pcpy.h
+lib/unistr/u-strcat.h
+lib/unistr/u-strlen.h
+lib/unistr/u32-chr.c
+lib/unistr/u32-cpy.c
+lib/unistr/u32-pcpy.c
+lib/unistr/u32-strcat.c
+lib/unistr/u32-strlen.c
 lib/unistr/u8-cpy.c
 lib/unistr/u8-mbtouc-unsafe-aux.c
 lib/unistr/u8-mbtouc-unsafe.c
@@ -443,6 +520,8 @@ lib/unitypes.in.h
 lib/uniwidth.in.h
 lib/uniwidth/cjk.h
 lib/uniwidth/width.c
+lib/uniwidth/width0.h
+lib/uniwidth/width2.h
 lib/unlink.c
 lib/unlocked-io.h
 lib/utime.c
@@ -454,6 +533,7 @@ lib/vasnprintf.h
 lib/vasprintf.c
 lib/verify.h
 lib/vsnprintf.c
+lib/vsnzprintf.c
 lib/w32sock.h
 lib/wait-process.c
 lib/wait-process.h
@@ -462,6 +542,8 @@ lib/warn-on-use.h
 lib/wchar.in.h
 lib/wcrtomb.c
 lib/wctype-h.c
+lib/wctype-impl.h
+lib/wctype.c
 lib/wctype.in.h
 lib/wcwidth.c
 lib/windows-initguard.h
@@ -469,6 +551,8 @@ lib/windows-mutex.c
 lib/windows-mutex.h
 lib/windows-once.c
 lib/windows-once.h
+lib/windows-path.c
+lib/windows-path.h
 lib/windows-recmutex.c
 lib/windows-recmutex.h
 lib/windows-rwlock.c

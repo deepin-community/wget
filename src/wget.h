@@ -1,5 +1,5 @@
 /* Miscellaneous declarations.
-   Copyright (C) 1996-2011, 2015, 2018-2021 Free Software Foundation,
+   Copyright (C) 1996-2011, 2015, 2018-2024 Free Software Foundation,
    Inc.
 
 This file is part of GNU Wget.
@@ -213,15 +213,21 @@ static inline unsigned char _unhex(unsigned char c)
 
 #define DO_REALLOC(basevar, sizevar, needed_size, type) do {    \
   long DR_needed_size = (needed_size);                          \
-  long DR_newsize = 0;                                          \
+  long DR_newsize = 0, sizevar_old = sizevar;                   \
   while ((sizevar) < (DR_needed_size)) {                        \
     DR_newsize = sizevar << 1;                                  \
     if (DR_newsize < 16)                                        \
       DR_newsize = 16;                                          \
     (sizevar) = DR_newsize;                                     \
   }                                                             \
-  if (DR_newsize)                                               \
-    basevar = xrealloc (basevar, DR_newsize * sizeof (type));   \
+  if (DR_newsize) {                                             \
+    void *basevar_new = xrealloc (basevar, DR_newsize * sizeof (type)); \
+    assert(basevar_new);                                        \
+    if (basevar_new != basevar) {                               \
+      memset (basevar_new + sizevar_old * sizeof (type), 0, (DR_newsize - sizevar_old) * sizeof (type)); \
+      basevar = basevar_new;                                    \
+    }                                                           \
+  }                                                             \
 } while (0)
 
 /* Used to print pointers (usually for debugging).  Print pointers

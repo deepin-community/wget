@@ -1,5 +1,5 @@
 /* Unit testing.
-   Copyright (C) 2005-2011, 2015, 2018-2021 Free Software Foundation,
+   Copyright (C) 2005-2011, 2015, 2018-2024 Free Software Foundation,
    Inc.
 
 This file is part of GNU Wget.
@@ -58,6 +58,7 @@ all_tests(void)
   mu_run_test (test_path_simplify);
   mu_run_test (test_append_uri_pathel);
   mu_run_test (test_are_urls_equal);
+  mu_run_test (test_uri_merge);
   mu_run_test (test_is_robots_txt_url);
 #ifdef HAVE_HSTS
   mu_run_test (test_hsts_new_entry);
@@ -65,6 +66,8 @@ all_tests(void)
   mu_run_test (test_hsts_url_rewrite_congruent);
   mu_run_test (test_hsts_read_database);
 #endif
+  mu_run_test (test_parse_netrc);
+  mu_run_test (test_retr_rate);
 
   return NULL;
 }
