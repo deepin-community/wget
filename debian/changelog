@@ -1,3 +1,9 @@
+wget (1.21.2-deepin2) unstable; urgency=medium
+
+  * merge upstream patch, fix CVE-2024-10524.
+
+ -- kongxinglong <kongxinglong@uniontech.com>  Mon, 25 Nov 2024 15:00:04 +0800
+
 wget (1.21.2-deepin1) unstable; urgency=medium
 
   * Rebuild
