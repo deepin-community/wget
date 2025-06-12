@@ -1,3 +1,9 @@
+wget (1.25.0-0deepin2) unstable; urgency=medium
+
+  * add sw support.
+
+ -- liujianqiang <liujianqiang@uniontech.com>  Thu, 12 Jun 2025 08:55:19 +0800
+
 wget (1.25.0-0deepin1) unstable; urgency=medium
 
   * new upstream release 1.25.0
