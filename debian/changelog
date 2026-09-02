@@ -1,3 +1,11 @@
+wget (1.25.0-0deepin4) unstable; urgency=medium
+
+  * fix(cve): CVE-2026-16599 (medium) - Fix server-controlled unbounded
+    MD5 loop in FTP OPIE   Upstream: https://gitlab.com/gnuwget/wget/-
+    /commit/e9697d98e7249b0f68a6be040a4f3dcc5bc101fa
+
+ -- deepin-ci-robot <packages@deepin.org>  Wed, 02 Sep 2026 16:40:49 +0800
+
 wget (1.25.0-0deepin3) unstable; urgency=medium
 
   * fix(cve): CVE-2026-15146
