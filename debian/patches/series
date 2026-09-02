@@ -3,3 +3,4 @@ wget-doc-remove-usr-local-in-wget.texi
 wget-passive_ftp-default
 uniontech0001-add-sw-support.patch
 CVE-2026-15146.patch
+CVE-2026-16599.patch
